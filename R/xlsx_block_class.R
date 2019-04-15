@@ -11,7 +11,8 @@ xlsx_block<-setClass(
         style='Style',
         border='character',
         border_style='character',
-        conditional='conditional_style'),
-    prototype = list(border='none')
+        conditional='conditional_style',
+        keep_na='logical'),
+    prototype = list(border='none',keep_na=FALSE)
 )
 
