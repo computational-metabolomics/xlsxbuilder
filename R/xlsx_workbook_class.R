@@ -7,8 +7,8 @@
 xlsx_workbook<-setClass(
     "xlsx_workbook",
     contains='xlsx_builder',
-    slots=c(sheets='list',overwrite='logical'),
-    prototype=list(overwrite=FALSE)
+    slots=c(sheets='list',overwrite='logical',padding='numeric'),
+    prototype=list(overwrite=FALSE,padding=2)
 )
 
 #' @export
@@ -21,13 +21,26 @@ setMethod(f="xlsx_write",
 
         # add sheets
         ns=length(WB$sheets)
+
+        # keep row_counts of sheets by name
+        rn=list()
+
         for (k in 1:ns) {
+
+            # add the sheet if it doesnt exist
+            if (!(WB$sheets[[k]]$name %in% wb$sheet_names)) {
+                addWorksheet(wb,WB$sheets[[k]]$name)
+                row_count = 0 # current row number
+            } else {
+                # add the tables to the bottom of the named sheet
+                row_count=rn[[WB$sheets[[k]]$name]]
+            }
+
             col_count = 0 # current column number
-            row_count = 0 # current row number
+
             # for each sheet
             nt=length(WB$sheets[[k]]$tables)
-            # add the sheet
-            addWorksheet(wb,WB$sheets[[k]]$name)
+
             # count the number of header rows
             head_count=numeric(nt)
             data_count=numeric(nt)
@@ -38,7 +51,7 @@ setMethod(f="xlsx_write",
             # pad the headers of smaller tables with spaces to make them the same size as the largest one
             for(m in 1:nt) {
                 if (head_count[m]<max(head_count)) {
-                    temp=matrix(NA,nrow=max(head_count[m]-head_count[m]),ncol=ncol(WB$sheets[[k]]$tables[[m]]$col_header$data))
+                    temp=matrix(NA,nrow=max(head_count)-head_count[m],ncol=ncol(WB$sheets[[k]]$tables[[m]]$col_header$data))
                     temp=as.data.frame(temp)
                     colnames(temp)=colnames(WB$sheets[[k]]$tables[[m]]$col_header$data)
                     WB$sheets[[k]]$tables[[m]]$col_header$data=rbind(temp,WB$sheets[[k]]$tables[[m]]$col_header$data)
@@ -97,7 +110,7 @@ setMethod(f="xlsx_write",
                 if (rwidth>0) {
                     writeData(wb=wb,sheet=WB$sheets[[k]]$name,
                         startRow = row_count+hheight+1,
-                        startCol= col_count + 1,
+                        startCol= col_count + 1 ,
                         x = WB$sheets[[k]]$tables[[m]]$row_header$data,
                         colNames = FALSE,borders = WB$sheets[[k]]$tables[[m]]$row_header$border,
                         borderStyle = WB$sheets[[k]]$tables[[m]]$row_header$border_style)
@@ -171,13 +184,44 @@ setMethod(f="xlsx_write",
                     }
                 }
 
-                col_count=rwidth+bwidth
+                col_count=rwidth+bwidth+ WB$sheets[[k]]$padding
 
             }
+
+            row_count=hheight+bheight+WB$padding
+
+            rn[[WB$sheets[[k]]$name]]=row_count
         }
 
         saveWorkbook(wb,fn,overwrite=TRUE)
         return(invisible(WB))
+    }
+)
+
+#' @export
+setMethod("+",
+    signature(e1='xlsx_sheet',e2='xlsx_sheet'),
+    definition=function(e1,e2) {
+        OUT=xlsx_workbook(sheets=c(e1,e2))
+        return(OUT)
+    }
+)
+
+#' @export
+setMethod("+",
+    signature(e1='xlsx_workbook',e2='xlsx_sheet'),
+    definition=function(e1,e2) {
+        e1$sheets=c(e1$sheets,e2)
+        return(e1)
+    }
+)
+
+#' @export
+setMethod("+",
+    signature(e1='xlsx_sheet',e2='xlsx_workbook'),
+    definition=function(e1,e2) {
+        e2$tables=c(e1,e2$tables)
+        return(e2)
     }
 )
 
