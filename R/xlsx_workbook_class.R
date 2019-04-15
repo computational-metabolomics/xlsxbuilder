@@ -82,9 +82,10 @@ setMethod(f="xlsx_write",
                     WB$sheets[[k]]$tables[[m]]$body$data=M
                 }
                 # replace row_header for first table, and remove for the other tables
-                R=as.data.frame(matrix(0,nrow=length(u),ncol=1))
-                R[,1]=u
-                R=xlsx_block(data=R,style=createStyle(textDecoration = 'bold',fontColour ='#0000ff'),border='columns',border_style='thin')
+                r=as.data.frame(matrix(0,nrow=length(u),ncol=1))
+                r[,1]=u
+                R=WB$sheets[[k]]$tables[[1]]$row_header
+                R$data=r
 
                 if (ncol(WB$sheets[[k]]$tables[[m]]$row_header$data)>0) {
                     warning('Row headers will be replaced by merged row names based on the row names of "body" data frames')
