@@ -185,7 +185,7 @@ setMethod(f="xlsx_write",
                     }
                 }
 
-                col_count=rwidth+bwidth+ WB$sheets[[k]]$padding
+                col_count=col_count+rwidth+bwidth+ WB$sheets[[k]]$padding
 
             }
 
