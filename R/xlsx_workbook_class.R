@@ -77,7 +77,7 @@ setMethod(f="xlsx_write",
                     # bind the two tables
                     M=rbind(WB$sheets[[k]]$tables[[m]]$body$data,M)
                     # arrage according to u
-                    M=M[u,]
+                    M=M[u,,drop=FALSE]
                     # add back to table
                     WB$sheets[[k]]$tables[[m]]$body$data=M
                 }
