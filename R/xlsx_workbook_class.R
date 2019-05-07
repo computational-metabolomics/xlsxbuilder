@@ -73,7 +73,7 @@ setMethod(f="xlsx_write",
                     colnames(M)=colnames(WB$sheets[[k]]$tables[[m]]$body$data)
                     # remove the names already present
                     IN=rownames(WB$sheets[[k]]$tables[[m]]$body$data) %in% u
-                    M=M[-IN,]
+                    M=M[-IN,,drop=FALSE]
                     # bind the two tables
                     M=rbind(WB$sheets[[k]]$tables[[m]]$body$data,M)
                     # arrage according to u
