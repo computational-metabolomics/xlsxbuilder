@@ -1,12 +1,13 @@
 Package: xlsxbuilder
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Export Data to Formatted xlsx Files
 Version: 0.1.0
 Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Maintainer: Dr Gavin Rhys Lloyd <g.r.lloyd@bham.ac.uk>
+Description: xlsxbuilder wraps the functionality provided by openxlsx to
+    make it easier to export data to alsx files with multiple sheets, 
+    multi-line column/row headers and other formatting options.
+License: GPL3
 Encoding: UTF-8
 LazyData: true
 Depends: openxlsx
