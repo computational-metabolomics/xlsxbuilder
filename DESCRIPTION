@@ -2,7 +2,7 @@ Package: xlsxbuilder
 Type: Package
 Title: Export Data to Formatted xlsx Files
 Version: 0.1.0
-Author: Who wrote it
+Author: Dr Gavin Rhys Lloyd
 Maintainer: Dr Gavin Rhys Lloyd <g.r.lloyd@bham.ac.uk>
 Description: xlsxbuilder wraps the functionality provided by openxlsx to
     make it easier to export data to alsx files with multiple sheets, 
