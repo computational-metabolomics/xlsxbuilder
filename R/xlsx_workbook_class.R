@@ -61,40 +61,7 @@ setMethod(f="xlsx_write",
             # if merge = true, attempt to (row) merge the tables in a sheet
             # get unique row names across all tables
             if (WB$sheets[[k]]$merge) {
-                u=rownames(WB$sheets[[k]]$tables[[1]]$body$data)
-                for (m in 2:nt) {
-                    u=unique(c(u,rownames(WB$sheets[[k]]$tables[[m]]$body$data)))
-                }
-                # for each table, add any rows that are missing
-                for (m in 1:nt) {
-                    M=matrix(NA,nrow=length(u),ncol=ncol(WB$sheets[[k]]$tables[[m]]$body$data))
-                    M=as.data.frame(M)
-                    rownames(M)=u
-                    colnames(M)=colnames(WB$sheets[[k]]$tables[[m]]$body$data)
-                    # remove the names already present
-                    IN=rownames(WB$sheets[[k]]$tables[[m]]$body$data) %in% u
-                    M=M[-IN,,drop=FALSE]
-                    # bind the two tables
-                    M=rbind(WB$sheets[[k]]$tables[[m]]$body$data,M)
-                    # arrage according to u
-                    M=M[u,,drop=FALSE]
-                    # add back to table
-                    WB$sheets[[k]]$tables[[m]]$body$data=M
-                }
-                # replace row_header for first table, and remove for the other tables
-                r=as.data.frame(matrix(0,nrow=length(u),ncol=1))
-                r[,1]=u
-                R=WB$sheets[[k]]$tables[[1]]$row_header
-                R$data=r
-
-                if (ncol(WB$sheets[[k]]$tables[[m]]$row_header$data)>0) {
-                    warning('Row headers will be replaced by merged row names based on the row names of "body" data frames')
-                }
-                WB$sheets[[k]]$tables[[1]]$row_header=R
-
-                for (m in 2:nt) {
-                    WB$sheets[[k]]$tables[[m]]$row_header=xlsx_block()
-                }
+              WB$sheets[[k]]=merge_tables(WB$sheets[[k]],'rows')
             }
 
             for (m in 1:nt) {
