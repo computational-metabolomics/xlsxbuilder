@@ -36,3 +36,9 @@ setGeneric("col_border_style<-",function(x,value)standardGeneric("col_border_sty
 
 #' @export
 setGeneric("merge_tables",function(S,mode,warn=TRUE)standardGeneric("merge_tables"))
+
+#' @export
+setGeneric("rmerge",function(S,...)standardGeneric("rmerge"))
+
+#' @export
+setGeneric("cmerge",function(S,...)standardGeneric("cmerge"))

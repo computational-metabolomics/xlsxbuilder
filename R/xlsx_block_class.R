@@ -13,6 +13,6 @@ xlsx_block<-setClass(
         border_style='character',
         conditional='conditional_style',
         keep_na='logical'),
-    prototype = list(border='none',keep_na=FALSE,border_style='thin')
+    prototype = list(border='none',keep_na=TRUE,border_style='thin')
 )
 

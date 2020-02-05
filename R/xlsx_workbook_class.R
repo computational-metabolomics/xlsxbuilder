@@ -58,12 +58,7 @@ setMethod(f="xlsx_write",
                 }
             }
 
-            # if merge = true, attempt to (row) merge the tables in a sheet
-            # get unique row names across all tables
-            if (WB$sheets[[k]]$merge) {
-              WB$sheets[[k]]=merge_tables(WB$sheets[[k]],'rows')
-            }
-
+           
             for (m in 1:nt) {
                 # for each table
 
