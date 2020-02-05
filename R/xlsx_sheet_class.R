@@ -43,7 +43,7 @@ setMethod("+",
 setMethod(f='rmerge',signature=c('xlsx_sheet'),
   definition=function(S) {
     
-    S$tables=row_merge(S$tables)
+    S$tables=list(row_merge(S$tables))
     
     return(S)
   })
@@ -52,7 +52,7 @@ setMethod(f='rmerge',signature=c('xlsx_sheet'),
 setMethod(f='cmerge',signature=c('xlsx_sheet'),
   definition=function(S) {
     
-    S$tables=col_merge(S$tables)
+    S$tables=list(col_merge(S$tables))
     
     return(S)
   })
