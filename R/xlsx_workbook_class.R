@@ -156,7 +156,9 @@ setMethod(f="xlsx_write",
             rn[[WB$sheets[[k]]$name]]=row_count
         }
 
+        print('Writing file...')
         saveWorkbook(wb,fn,overwrite=TRUE)
+        print('Success!')
         return(invisible(WB))
     }
 )

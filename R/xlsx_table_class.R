@@ -168,12 +168,16 @@ row_merge=function(S) {
     nt=length(S)
     
     # get unique row names over all tables
-    u=rownames(S[[1]]$body$data)
-    ru=rownames(S[[1]]$row_header$data)
-    for (m in 2:nt) {
+    u=character()
+    ru=character()
+    hdr_count=numeric()
+    for (m in 1:nt) {
         u=unique(c(u,rownames(S[[m]]$body$data)))
         ru=unique(c(ru,rownames(S[[m]]$row_header$data)))
+        hdr_count[m]=nrow(S[[m]]$col_header$data)
     }
+    
+    hdr_count=max(hdr_count)
     
     idx=rep(NA,length(u))
     
@@ -208,6 +212,17 @@ row_merge=function(S) {
         S[[m]]$row_header$data=r
         
         idx[IN]=min(idx[IN],m,na.rm=TRUE)
+        
+        
+        # give all tables the same number of header rows
+        C=S[[m]]$col_header$data
+        if (nrow(C)<hdr_count) {
+            mm=matrix('',nrow=hdr_count,ncol=ncol(C))
+            mm=as.data.frame(mm,,stringsAsFactors=FALSE)
+            mm[(hdr_count-nrow(C)+1):hdr_count,]=C
+            colnames(mm)=colnames(C)
+            S[[m]]$col_header$data=mm
+        }
     }
     
     OUT=S[[1]]
@@ -225,6 +240,7 @@ row_merge=function(S) {
         
         IN=rownames(S[[k]]$row_header$data) %in% ru[idx==k]
         R[idx==k,]=S[[k]]$row_header$data[IN,]
+
     }
     OUT$row_header$data=R
     
@@ -246,12 +262,16 @@ col_merge=function(S) {
     nt=length(S)
     
     # get unique row names over all tables
-    u=colnames(S[[1]]$body$data)
-    ru=colnames(S[[1]]$col_header$data)
-    for (m in 2:nt) {
+    u=character()
+    ru=character()
+    hdr_count=numeric()
+    for (m in 1:nt) {
         u=unique(c(u,colnames(S[[m]]$body$data)))
         ru=unique(c(ru,colnames(S[[m]]$col_header$data)))
+        hdr_count[m]=nrow(S[[m]]$row_header$data)
     }
+    
+    hdr_count=max(hdr_count)
     
     idx=rep(NA,length(u))
     
@@ -286,6 +306,16 @@ col_merge=function(S) {
         S[[m]]$col_header$data=r
         
         idx[IN]=min(idx[IN],m,na.rm=TRUE)
+        
+        # give all tables the same number of header rows
+        C=S[[m]]$row_header$data
+        if (ncol(C)<hdr_count) {
+          mm=matrix('',ncol=hdr_count,nrow=nrow(C))
+          mm=as.data.frame(mm,stringsAsFactors=FALSE)
+          mm[,(hdr_count-nrow(C)+1):hdr_count]=C
+          rownames(mm)=rownames(C)
+          S[[m]]$row_header$data=mm
+        }
     }
     
     OUT=S[[1]]
