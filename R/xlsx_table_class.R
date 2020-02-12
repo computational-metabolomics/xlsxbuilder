@@ -217,7 +217,7 @@ row_merge=function(S) {
         # give all tables the same number of header rows
         C=S[[m]]$col_header$data
         if (nrow(C)<hdr_count) {
-            mm=matrix('',nrow=hdr_count,ncol=ncol(C))
+            mm=matrix(NA,nrow=hdr_count,ncol=ncol(C))
             mm=as.data.frame(mm,,stringsAsFactors=FALSE)
             mm[(hdr_count-nrow(C)+1):hdr_count,]=C
             colnames(mm)=colnames(C)
@@ -268,7 +268,7 @@ col_merge=function(S) {
     for (m in 1:nt) {
         u=unique(c(u,colnames(S[[m]]$body$data)))
         ru=unique(c(ru,colnames(S[[m]]$col_header$data)))
-        hdr_count[m]=nrow(S[[m]]$row_header$data)
+        hdr_count[m]=ncol(S[[m]]$row_header$data)
     }
     
     hdr_count=max(hdr_count)
@@ -312,7 +312,7 @@ col_merge=function(S) {
         if (ncol(C)<hdr_count) {
           mm=matrix('',ncol=hdr_count,nrow=nrow(C))
           mm=as.data.frame(mm,stringsAsFactors=FALSE)
-          mm[,(hdr_count-nrow(C)+1):hdr_count]=C
+          mm[,(hdr_count-ncol(C)+1):hdr_count]=C
           rownames(mm)=rownames(C)
           S[[m]]$row_header$data=mm
         }
