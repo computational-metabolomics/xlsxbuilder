@@ -11,22 +11,7 @@ xlsx_table<-setClass(
         col_header='xlsx_block',
         row_header='xlsx_block',
         name='character'
-    ),
-    validity=function(object) {
-        A=all(rownames(object$row_header$data)==rownames(object$body$data))
-        B=all(colnames(object$col_header$data)==colnames(object$body$data))
-        
-        valid=TRUE
-        if (!A) {
-            valid='Rownames of row header must match the rownames of the body.'
-        }
-        if (!B) {
-            valid='Colnames of col header must match the colnames of the body.'
-        }
-        
-        
-        return(valid)
-    }
+    )
 )
 
 #' @export headers_from_body
