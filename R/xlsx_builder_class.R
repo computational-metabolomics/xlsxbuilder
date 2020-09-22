@@ -36,5 +36,6 @@ setMethod(f="$<-",
         } else {
             stop(paste0('"',name,'" is not a valid slot'))
         }
+        validObject(x)
     }
 )
