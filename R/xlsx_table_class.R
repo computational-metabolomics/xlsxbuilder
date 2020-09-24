@@ -139,96 +139,78 @@ setMethod(f='col_border_style<-',
 
 #' @export
 setMethod(f='rmerge',signature=c('xlsx_table'),
-    definition=function(S,...) {
+    definition=function(S,...,all_equal=FALSE) {
         
         S=c(list(S),list(...))
-        S=row_merge(S)
+        if (length(S)>1) {
+            S=row_merge(S,all_equal)
+        }
         return(S)
         
     })
 
 
-row_merge=function(S) {
+row_merge=function(S,all_equal=FALSE) {
+    # S is a list of tables
+    
     # number of tables in sheet
     nt=length(S)
     
-    # get unique row names over all tables
-    u=character()
-    ru=character()
-    hdr_count=numeric()
-    for (m in 1:nt) {
-        u=unique(c(u,rownames(S[[m]]$body$data)))
-        ru=unique(c(ru,rownames(S[[m]]$row_header$data)))
-        hdr_count[m]=nrow(S[[m]]$col_header$data)
+    # new table
+    OUT=S[[1]] # copy to get some formatting
+    
+    # merge body data
+    M = S[[1]]$body$data
+    colnames(M)=interaction(colnames(M),'1',sep='_')
+    for (k in 2:nt) {
+        N = S[[k]]$body$data
+        colnames(N)=interaction(colnames(N),k,sep='_')
+        M = merge(M,N,by='row.names',sort=FALSE,all=TRUE)
+        rownames(M)=M$Row.names
+        M$Row.names=NULL
     }
+    OUT$body$data=M
     
-    hdr_count=max(hdr_count)
+    # row data
+    OUT$row_header$data=data.frame('1'=rownames(M),row.names = rownames(M))
     
-    idx=rep(NA,length(u))
-    
-    # for each table, add any rows that are missing
-    for (m in 1:nt) {
-        
-        # body
-        M=matrix(NA,nrow=length(u),ncol=ncol(S[[m]]$body$data))
-        M=as.data.frame(M)
-        # row header
-        r=matrix(NA,nrow=length(u),ncol=ncol(S[[m]]$row_header$data))
-        r=as.data.frame(r)
-        
-        rownames(M)=u
-        colnames(M)=colnames(S[[m]]$body$data)
-        
-        rownames(r)=ru
-        colnames(r)=colnames(S[[m]]$row_header$data)
-        
-        # remove the names already present
-        IN=u %in% rownames(S[[m]]$body$data)
-        M=M[!IN,,drop=FALSE]
-        r=r[!IN,,drop=FALSE]
-        # bind the two tables
-        M=rbind(S[[m]]$body$data,M)
-        r=rbind(S[[m]]$row_header$data,r)
-        # back into original order
-        M=M[u,,drop=FALSE]
-        r=r[ru,,drop=FALSE]
-        # add back to table
-        S[[m]]$body$data=M
-        S[[m]]$row_header$data=r
-        
-        idx[IN]=min(idx[IN],m,na.rm=TRUE)
-        
-        
-        # give all tables the same number of header rows
-        C=S[[m]]$col_header$data
-        if (nrow(C)<hdr_count) {
-            mm=matrix(NA,nrow=hdr_count,ncol=ncol(C))
-            mm=as.data.frame(mm,,stringsAsFactors=FALSE)
-            mm[(hdr_count-nrow(C)+1):hdr_count,]=C
-            colnames(mm)=colnames(C)
-            S[[m]]$col_header$data=mm
-        }
+    # merge col data
+    M = S[[1]]$col_header$data
+    colnames(M)=interaction(colnames(M),'1',sep='_')
+    for (k in 2:nt) {
+        N = S[[k]]$col_header$data
+        colnames(N)=interaction(colnames(N),k,sep='_')
+        M = merge(M,N,by='row.names',sort=FALSE,all=TRUE)
+        rownames(M)=M$Row.names
+        M$Row.names=NULL
     }
-    
-    OUT=S[[1]]
-    R=matrix(NA,nrow=length(ru),ncol=ncol(OUT$row_header$data))
-    R=as.data.frame(R)
-    rownames(R)=ru
-    colnames(R)=colnames(OUT$row_header$data)
-    
-    for (k in 1:length(S)) {
-        
-        if (k>1) {
-            OUT$body$data=cbind(OUT$body$data,S[[k]]$body$data,stringsAsFactors = FALSE)
-            OUT$col_header$data=cbind(OUT$col_header$data,S[[k]]$col_header$data,stringsAsFactors = FALSE)
-        }
-        
-        IN=rownames(S[[k]]$row_header$data) %in% ru[idx==k]
-        R[idx==k,]=S[[k]]$row_header$data[IN,]
+    OUT$col_header$data=M
 
-    }
-    OUT$row_header$data=R
     
+    
+    # if row data is identical across tables then keep it
+    M = S[[1]]$row_header$data
+    all_equal = TRUE
+    for (k in 2:nt) {
+        
+        N=S[[k]]$row_header$data
+        
+        if (!all(dim(M)==dim(N))) {
+            all_equal=FALSE
+            break
+        }
+        if (!all(M==N)) {
+            all_equal=FALSE
+            break
+        }
+    }
+    # all equal so do replacement
+    if (all_equal) {
+        R=S[[1]]$row_header
+        # sort the body int the same order as the header
+        OUT$body$data=OUT$body$data[rownames(R$data),]
+        OUT$row_header=R
+    }
     return(OUT)
 }
 
@@ -236,90 +218,76 @@ row_merge=function(S) {
 
 #' @export
 setMethod(f='cmerge',signature=c('xlsx_table'),
-    definition=function(S,...) {
+    definition=function(S,...,all_equal=FALSE) {
         S=c(list(S),list(...))
-        S=col_merge(S)
+        if (length(S)>1) {
+            S=col_merge(S,all_equal)
+        }
         return(S)
     })
 
-col_merge=function(S) {
+col_merge=function(S,all_equal=FALSE) {
+    
+    # S is a list of tables
+    
     # number of tables in sheet
     nt=length(S)
     
-    # get unique row names over all tables
-    u=character()
-    ru=character()
-    hdr_count=numeric()
-    for (m in 1:nt) {
-        u=unique(c(u,colnames(S[[m]]$body$data)))
-        ru=unique(c(ru,colnames(S[[m]]$col_header$data)))
-        hdr_count[m]=ncol(S[[m]]$row_header$data)
-    }
-    
-    hdr_count=max(hdr_count)
-    
-    idx=rep(NA,length(u))
-    
-    # for each table, add any rows that are missing
-    for (m in 1:nt) {
-        
-        # body
-        M=matrix(NA,ncol=length(u),nrow=nrow(S[[m]]$body$data))
-        M=as.data.frame(M)
-        # row header
-        r=matrix(NA,ncol=length(u),nrow=nrow(S[[m]]$col_header$data))
-        r=as.data.frame(r)
-        
-        colnames(M)=u
-        rownames(M)=rownames(S[[m]]$body$data)
-        
-        colnames(r)=ru
-        rownames(r)=rownames(S[[m]]$col_header$data)
-        
-        # remove the names already present
-        IN=u %in% colnames(S[[m]]$body$data)
-        M=M[,!IN,drop=FALSE]
-        r=r[,!IN,drop=FALSE]
-        # bind the two tables
-        M=cbind(S[[m]]$body$data,M)
-        r=cbind(S[[m]]$col_header$data,r)
-        # back into original order
-        M=M[,u,drop=FALSE]
-        r=r[,ru,drop=FALSE]
-        # add back to table
-        S[[m]]$body$data=M
-        S[[m]]$col_header$data=r
-        
-        idx[IN]=min(idx[IN],m,na.rm=TRUE)
-        
-        # give all tables the same number of header rows
-        C=S[[m]]$row_header$data
-        if (ncol(C)<hdr_count) {
-          mm=matrix('',ncol=hdr_count,nrow=nrow(C))
-          mm=as.data.frame(mm,stringsAsFactors=FALSE)
-          mm[,(hdr_count-ncol(C)+1):hdr_count]=C
-          rownames(mm)=rownames(C)
-          S[[m]]$row_header$data=mm
-        }
-    }
-    
+    # new table
     OUT=S[[1]]
-    R=matrix(NA,ncol=length(ru),nrow=nrow(OUT$col_header$data))
-    R=as.data.frame(R)
-    colnames(R)=ru
-    rownames(R)=rownames(OUT$col_header$data)
     
-    for (k in 1:length(S)) {
+    # merge body data
+    M = t(S[[1]]$body$data)
+    colnames(M)=interaction(colnames(M),1,sep='_')
+    for (k in 2:nt) {
+        N=t(S[[k]]$body$data)
+        colnames(N)=interaction(colnames(N),k,sep='_')
+        M = merge(M,N,by='row.names',sort=FALSE,all=TRUE)
+        rownames(M)=M$Row.names
+        M$Row.names=NULL
+    }
+    OUT$body$data=data.frame(t(M))
+    
+    # col data
+    OUT$col_header$data=data.frame(matrix(colnames(OUT$body$data),nrow=1),row.names = '1')
+    colnames(OUT$col_header$data)=colnames(OUT$body$data)
+    
+    # merge row data
+    M = t(S[[1]]$row_header$data)
+    colnames(M)=interaction(colnames(M),1,sep='_')
+    for (k in 2:nt) {
+        N=t(S[[k]]$row_header$data)
+        colnames(N)=interaction(colnames(N),k,sep='_')
+        M = merge(M,N,by='row.names',sort=FALSE,all=TRUE)
+        rownames(M)=M$Row.names
+        M$Row.names=NULL
+    }
+    OUT$row_header$data=data.frame(t(M))
+    
+    # if column data is identical across tables then keep it
+    M = S[[1]]$col_header$data
+    
+    for (k in 2:nt) {
         
-        if (k>1) {
-            OUT$body$data=rbind(OUT$body$data,S[[k]]$body$data,stringsAsFactors = FALSE)
-            OUT$row_header$data=rbind(OUT$row_header$data,S[[k]]$row_header$data,stringsAsFactors = FALSE)
+        N=S[[k]]$col_header$data
+        
+        if (!all(dim(M)==dim(N))) {
+            all_equal=FALSE
+            break
         }
         
-        IN=colnames(S[[k]]$col_header$data) %in% ru[idx==k]
-        R[,idx==k]=S[[k]]$col_header$data[,IN]
+        if (!all(M==N,na.rm = TRUE)) {
+            all_equal=FALSE
+            break
+        }
     }
-    OUT$col_header$data=R
+    # all equal so do replacement
+    if (all_equal) {
+        R=S[[1]]$col_header
+        # sort the body into the same order as the header
+        OUT$body$data=OUT$body$data[,colnames(R$data)]
+        OUT$col_header=R
+    }
     
     return(OUT)
 }
