@@ -41,18 +41,33 @@ setMethod("+",
 
 #' @export
 setMethod(f='rmerge',signature=c('xlsx_sheet'),
-  definition=function(S) {
+  definition=function(S,all_equal = FALSE) {
     
-    S$tables=list(row_merge(S$tables))
+    S$tables=list(row_merge(S$tables,all_equal))
     
     return(S)
   })
 
 #' @export
 setMethod(f='cmerge',signature=c('xlsx_sheet'),
-  definition=function(S) {
+  definition=function(S,all_equal = FALSE) {
     
-    S$tables=list(col_merge(S$tables))
+    S$tables=list(col_merge(S$tables,all_equal))
     
     return(S)
   })
+
+#' @export
+setMethod(f='length',signature='xlsx_sheet',
+  definition=function(x) {
+    return(length(x$tables))
+  }
+)
+
+#' @export
+setMethod("[",
+  signature('xlsx_sheet'),
+  definition=function(x,i) {
+    return(x$tables[[i]])
+  }
+)
