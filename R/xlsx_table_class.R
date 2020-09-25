@@ -168,6 +168,7 @@ row_merge=function(S,all_equal=FALSE) {
         M = merge(M,N,by='row.names',sort=FALSE,all=TRUE)
         rownames(M)=M$Row.names
         M$Row.names=NULL
+
     }
     OUT$body$data=M
     
@@ -233,6 +234,7 @@ col_merge=function(S,all_equal=FALSE) {
     # number of tables in sheet
     nt=length(S)
     
+
     # new table
     OUT=S[[1]]
     
@@ -245,9 +247,11 @@ col_merge=function(S,all_equal=FALSE) {
         M = merge(M,N,by='row.names',sort=FALSE,all=TRUE)
         rownames(M)=M$Row.names
         M$Row.names=NULL
+
     }
     OUT$body$data=data.frame(t(M),check.names = FALSE)
     
+
     # col data
     OUT$col_header$data=data.frame(matrix(colnames(OUT$body$data),nrow=1),row.names = '1')
     colnames(OUT$col_header$data)=colnames(OUT$body$data)
@@ -261,6 +265,7 @@ col_merge=function(S,all_equal=FALSE) {
         M = merge(M,N,by='row.names',sort=FALSE,all=TRUE)
         rownames(M)=M$Row.names
         M$Row.names=NULL
+
     }
     OUT$row_header$data=data.frame(t(M),check.names=FALSE)
     
