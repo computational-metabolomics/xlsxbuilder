@@ -192,7 +192,6 @@ row_merge=function(S,all_equal=FALSE) {
     
     # if row data is identical across tables then keep it
     M = S[[1]]$row_header$data
-
     for (k in 2:nt) {
         
         N=S[[k]]$row_header$data
@@ -249,7 +248,7 @@ col_merge=function(S,all_equal=FALSE) {
         M$Row.names=NULL
     }
     OUT$body$data=data.frame(t(M),check.names = FALSE)
-    
+
     # col data
     OUT$col_header$data=data.frame(matrix(colnames(OUT$body$data),nrow=1),row.names = '1')
     colnames(OUT$col_header$data)=colnames(OUT$body$data)
