@@ -21,12 +21,14 @@ setMethod(f="headers_from_body",
         if (mode %in% c('both','col')) {
             h=as.data.frame(matrix(NA,1,ncol(x$body$data)))
             h[1,]=colnames(x$body$data)
+            colnames(h)=colnames(x$body$data)
             h=xlsx_block(data=h,style=createStyle(textDecoration = 'bold'),border='surrounding',border_style = 'thin')
             x$col_header=h
         }
         if (mode %in% c('both','row')) {
             r=as.data.frame(matrix(NA,nrow(x$body$data),1))
             r[,1]=rownames(x$body$data)
+            rownames(r)=rownames(x$body$data)
             r=xlsx_block(data=r,style=createStyle(textDecoration = 'bold'),border='surrounding',border_style = 'thin')
             x$row_header=r
         }
@@ -168,7 +170,6 @@ row_merge=function(S,all_equal=FALSE) {
         M = merge(M,N,by='row.names',sort=FALSE,all=TRUE)
         rownames(M)=M$Row.names
         M$Row.names=NULL
-
     }
     OUT$body$data=M
     
@@ -191,7 +192,6 @@ row_merge=function(S,all_equal=FALSE) {
     
     # if row data is identical across tables then keep it
     M = S[[1]]$row_header$data
-    all_equal = TRUE
     for (k in 2:nt) {
         
         N=S[[k]]$row_header$data
@@ -234,7 +234,6 @@ col_merge=function(S,all_equal=FALSE) {
     # number of tables in sheet
     nt=length(S)
     
-
     # new table
     OUT=S[[1]]
     
@@ -247,10 +246,8 @@ col_merge=function(S,all_equal=FALSE) {
         M = merge(M,N,by='row.names',sort=FALSE,all=TRUE)
         rownames(M)=M$Row.names
         M$Row.names=NULL
-
     }
     OUT$body$data=data.frame(t(M),check.names = FALSE)
-    
 
     # col data
     OUT$col_header$data=data.frame(matrix(colnames(OUT$body$data),nrow=1),row.names = '1')
@@ -265,7 +262,6 @@ col_merge=function(S,all_equal=FALSE) {
         M = merge(M,N,by='row.names',sort=FALSE,all=TRUE)
         rownames(M)=M$Row.names
         M$Row.names=NULL
-
     }
     OUT$row_header$data=data.frame(t(M),check.names=FALSE)
     
@@ -297,3 +293,70 @@ col_merge=function(S,all_equal=FALSE) {
     return(OUT)
 }
 
+
+
+
+row_sync=function(S,all_equal=FALSE) {
+    # S is a list of tables
+    
+    # number of tables in sheet
+    nt=length(S)
+    
+    # new table
+    OUT=S[[1]] # copy to get some formatting
+    
+    # merge body data
+    M = S[[1]]$body$data
+    colnames(M)=interaction(colnames(M),'1',sep='_')
+    
+    for (k in 2:nt) {
+        N = S[[k]]$body$data
+        colnames(N)=interaction(colnames(N),k,sep='_')
+        M = merge(M,N,by='row.names',sort=FALSE,all=TRUE)
+        rownames(M)=M$Row.names
+        M$Row.names=NULL
+    }
+    OUT$body$data=M
+    
+    # row data
+    OUT$row_header$data=data.frame('1'=rownames(M),row.names = rownames(M))
+    
+    # merge col data
+    M = S[[1]]$col_header$data
+    colnames(M)=interaction(colnames(M),'1',sep='_')
+    for (k in 2:nt) {
+        N = S[[k]]$col_header$data
+        colnames(N)=interaction(colnames(N),k,sep='_')
+        M = merge(M,N,by='row.names',sort=FALSE,all=TRUE)
+        rownames(M)=M$Row.names
+        M$Row.names=NULL
+    }
+    OUT$col_header$data=M
+    
+    
+    
+    # if row data is identical across tables then keep it
+    M = S[[1]]$row_header$data
+
+    for (k in 2:nt) {
+        
+        N=S[[k]]$row_header$data
+        
+        if (!all(dim(M)==dim(N))) {
+            all_equal=FALSE
+            break
+        }
+        if (!all(M==N)) {
+            all_equal=FALSE
+            break
+        }
+    }
+    # all equal so do replacement
+    if (all_equal) {
+        R=S[[1]]$row_header
+        # sort the body int the same order as the header
+        OUT$body$data=OUT$body$data[rownames(R$data),]
+        OUT$row_header=R
+    }
+    return(OUT)
+}
